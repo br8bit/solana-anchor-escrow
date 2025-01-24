@@ -1,9 +1,20 @@
 use anchor_lang::prelude::*;
 use anchor_spl::{
-    associated_token::AssociatedToken, token_interface::{Mint, TokenAccount, TokenInterface, transfer_checked, TransferChecked}
+    associated_token::AssociatedToken, 
+    token_interface::{
+        transfer_checked,
+        Mint,
+        TokenAccount,
+        TokenInterface,
+        TransferChecked
+    }
 };
 
-use crate::state::EscrowState;
+use crate::{
+    events::DepositEvent,
+    state::EscrowState,
+    errors::EscrowError,
+};
 
 #[derive(Accounts)]
 #[instruction(seed: u64)]
@@ -11,6 +22,7 @@ pub struct Make<'info> {
     #[account(mut)]
     pub maker: Signer<'info>,
 
+    #[account(constraint = mint_a.key() != mint_b.key() @ EscrowError::SameMint)]
     pub mint_a: InterfaceAccount<'info, Mint>,
     pub mint_b: InterfaceAccount<'info, Mint>,
 
@@ -31,10 +43,11 @@ pub struct Make<'info> {
     pub escrow: Account<'info, EscrowState>,
 
     #[account(
-        init, 
-        payer = maker, 
+        init,
+        payer = maker,
         associated_token::mint = mint_a, 
         associated_token::authority = escrow,
+        associated_token::token_program = token_program
     )] 
     pub vault: InterfaceAccount<'info, TokenAccount>,
 
@@ -43,7 +56,7 @@ pub struct Make<'info> {
     pub system_program: Program<'info, System>,
 }
 
-impl<'info> Make<'info> {
+impl Make<'_> {
     pub fn init_escrow_state(
         &mut self, 
         seed: u64, 
@@ -57,23 +70,34 @@ impl<'info> Make<'info> {
             mint_b: self.mint_b.key(),
             seed,
             bump: bumps.escrow,
+            created_at: Clock::get()?.unix_timestamp,
         });
         Ok(())
     }
 
     pub fn deposit(&mut self, amount: u64) -> Result<()> {
 
+        require!(self.maker_ata_mint_a.amount >= amount, EscrowError::InsufficientBalance);
+
         let cpi_program = self.token_program.to_account_info();
 
         let cpi_accounts = TransferChecked {
             from: self.maker_ata_mint_a.to_account_info(),
-            to: self.escrow.to_account_info(),
+            to: self.vault.to_account_info(),
             mint: self.mint_a.to_account_info(),
             authority: self.maker.to_account_info(),
         };
 
         let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
 
-        transfer_checked(cpi_ctx, amount, self.mint_b.decimals)
+        transfer_checked(cpi_ctx, amount, self.mint_a.decimals)?;
+
+        emit!(DepositEvent {
+            maker: self.maker.key(),
+            amount,
+            timestamp: Clock::get()?.unix_timestamp,
+        });
+
+        Ok(())
     }
 }
