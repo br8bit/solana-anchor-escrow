@@ -1,13 +1,14 @@
 use anchor_lang::prelude::*;
 use anchor_spl::{
-    associated_token::AssociatedToken, 
+    associated_token::{AssociatedToken, ID as ASSOCIATED_TOKEN_PROGRAM_ID}, 
     token_interface::{
         transfer_checked,
         Mint,
         TokenAccount,
         TokenInterface,
         TransferChecked
-    }
+    },
+    token::ID as TOKEN_PROGRAM_ID,
 };
 
 use crate::{
@@ -51,8 +52,12 @@ pub struct Make<'info> {
     )] 
     pub vault: InterfaceAccount<'info, TokenAccount>,
 
-    pub associated_token_program: Program<'info, AssociatedToken>,
+    #[account(address = TOKEN_PROGRAM_ID)] // Address verification for the token program. Prevent malicious actors from passing fake token programs.
     pub token_program: Interface<'info, TokenInterface>,
+
+    #[account(address = ASSOCIATED_TOKEN_PROGRAM_ID)]
+    pub associated_token_program: Program<'info, AssociatedToken>,
+    
     pub system_program: Program<'info, System>,
 }
 
