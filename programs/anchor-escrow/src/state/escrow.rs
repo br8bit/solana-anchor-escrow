@@ -9,4 +9,5 @@ pub struct EscrowState {
     pub mint_b: Pubkey,
     pub bump: u8,
     pub seed: u64,
+    pub created_at: i64,
 }
