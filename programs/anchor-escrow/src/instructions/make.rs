@@ -31,6 +31,7 @@ pub struct Make<'info> {
         mut, 
         associated_token::mint = mint_a, 
         associated_token::authority = maker,
+        constraint = !maker_ata_mint_a.is_frozen() @ EscrowError::AccountFrozen
     )]
     pub maker_ata_mint_a: InterfaceAccount<'info, TokenAccount>,
 
@@ -57,7 +58,7 @@ pub struct Make<'info> {
 
     #[account(address = ASSOCIATED_TOKEN_PROGRAM_ID)]
     pub associated_token_program: Program<'info, AssociatedToken>,
-    
+
     pub system_program: Program<'info, System>,
 }
 

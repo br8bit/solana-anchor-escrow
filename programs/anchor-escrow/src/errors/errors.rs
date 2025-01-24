@@ -10,4 +10,6 @@ pub enum EscrowError {
     InvalidVault,
     #[msg("Overflow/underflow detected")]
     Overflow,
+    #[msg("Account is frozen")]
+    AccountFrozen,
 }
