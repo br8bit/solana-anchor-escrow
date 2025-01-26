@@ -49,7 +49,7 @@ pub struct Make<'info> {
         payer = maker,
         associated_token::mint = mint_a, 
         associated_token::authority = escrow,
-        associated_token::token_program = token_program
+        constraint = !vault.is_frozen() @ EscrowError::AccountFrozen
     )] 
     pub vault: InterfaceAccount<'info, TokenAccount>,
 
@@ -63,23 +63,22 @@ pub struct Make<'info> {
 }
 
 impl Make<'_> {
-    pub fn init_escrow_state(
-        &mut self, 
-        seed: u64, 
-        receive_amount: u64, 
-        bumps: &MakeBumps
-    ) -> Result<()> {
-        self.escrow.set_inner(EscrowState {
-            receive_amount,
-            maker: self.maker.key(),
-            mint_a: self.mint_a.key(),
-            mint_b: self.mint_b.key(),
-            seed,
-            bump: bumps.escrow,
-            created_at: Clock::get()?.unix_timestamp,
-        });
-        Ok(())
-    }
+     pub fn init_escrow_state(
+         &mut self,
+         seed: u64,
+         receive_amount: u64,
+         bumps: &MakeBumps
+     ) -> Result<()> {
+         self.escrow.set_inner(EscrowState {
+             receive_amount,
+             maker: self.maker.key(),
+             mint_a: self.mint_a.key(),
+             mint_b: self.mint_b.key(),
+             seed,
+             bump: bumps.escrow,
+         });
+         Ok(())
+     }
 
     pub fn deposit(&mut self, amount: u64) -> Result<()> {
 
