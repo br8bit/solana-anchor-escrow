@@ -6,10 +6,12 @@ pub enum EscrowError {
     SameMint,
     #[msg("Insufficient balance in maker's account")]
     InsufficientBalance,
-    #[msg("Invalid vault account")]
-    InvalidVault,
     #[msg("Overflow/underflow detected")]
     Overflow,
     #[msg("Account is frozen")]
     AccountFrozen,
+    #[msg("Invalid vault authority")]
+    InvalidVaultAuthority,
+    #[msg("Vault already contains funds")]
+    VaultAlreadyFunded,
 }
