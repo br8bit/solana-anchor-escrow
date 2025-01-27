@@ -24,8 +24,8 @@ pub struct Make<'info> {
     pub maker: Signer<'info>,
 
     #[account(constraint = mint_a.key() != mint_b.key() @ EscrowError::SameMint)]
-    pub mint_a: InterfaceAccount<'info, Mint>,
-    pub mint_b: InterfaceAccount<'info, Mint>,
+    pub mint_a: Box<InterfaceAccount<'info, Mint>>,
+    pub mint_b: Box<InterfaceAccount<'info, Mint>>,
 
     #[account(
         mut, 
@@ -33,7 +33,7 @@ pub struct Make<'info> {
         associated_token::authority = maker,
         constraint = !maker_ata_mint_a.is_frozen() @ EscrowError::AccountFrozen
     )]
-    pub maker_ata_mint_a: InterfaceAccount<'info, TokenAccount>,
+    pub maker_ata_mint_a: Box<InterfaceAccount<'info, TokenAccount>>,
 
     #[account(
         init, 
@@ -51,7 +51,7 @@ pub struct Make<'info> {
         associated_token::authority = escrow,
         constraint = !vault.is_frozen() @ EscrowError::AccountFrozen
     )] 
-    pub vault: InterfaceAccount<'info, TokenAccount>,
+    pub vault: Box<InterfaceAccount<'info, TokenAccount>>,
 
     #[account(address = TOKEN_PROGRAM_ID)] // Address verification for the token program. Prevent malicious actors from passing fake token programs.
     pub token_program: Interface<'info, TokenInterface>,
