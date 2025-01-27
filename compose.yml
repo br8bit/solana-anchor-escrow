@@ -1,0 +1,13 @@
+services:
+  anchor-test:
+    # image: solana-anchor-env
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: anchor-test-container
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+    command: anchor test
+    stdin_open: true
+    tty: true
